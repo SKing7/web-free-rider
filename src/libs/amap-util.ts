@@ -17,3 +17,13 @@ export const createMarker = (coord: Coord, markerContent: string) => {
 export const setCenter = (map: any, coord: Coord, zoom: number = 11) => {
   map.setZoomAndCenter(zoom, [coord.lng, coord.lat]);
 }
+
+export const createCluster = (map: any, points: { lnglat: number[], weight?: number }[]) => {
+  const AMap = window.AMap;
+  map.plugin(["AMap.MarkerCluster"], function () {
+    const cluster = new AMap.MarkerCluster(map, points, {
+      gridSize: 80 // 聚合网格像素大小
+    });
+    return cluster;
+  });
+}

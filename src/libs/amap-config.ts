@@ -9,3 +9,4 @@ export function initAMapSecurityConfig() {
 
 
 export const WEB_API_KEY = '8e0acf3082c3970d1c4cbb3c1bf9be2b'
+export const WEB_SDK_KEY = '264273b8dbce35866e45d9fb138e93d2'

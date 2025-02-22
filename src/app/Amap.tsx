@@ -1,12 +1,13 @@
 "use client";
-import { initAMapSecurityConfig } from "@/libs/amap-config";
+import { initAMapSecurityConfig, WEB_SDK_KEY } from "@/libs/amap-config";
 import { getAmapCoordinate } from "@/libs/amap-service";
-import { createMarker, setCenter } from "@/libs/amap-util";
+import { createCluster, createMarker, setCenter } from "@/libs/amap-util";
 import { Coord } from "@/type";
 import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
 import { Loader2, LocateFixed } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { fetchCameraCoordinateData } from "@/libs/utils";
 
 export default function Amap() {
   const myLocationMarkerRef = useRef(null);
@@ -16,6 +17,7 @@ export default function Amap() {
   const [isLocating, setLocating] = useState(false);
 
   const handleMapLoaded = () => {
+    console.log("[rider]Map Loaded");
     const map = new window.AMap.Map(mapNodeRef.current, {
       viewMode: "2D", //默认使用 2D 模式
       zoom: 14, //地图级别
@@ -23,7 +25,9 @@ export default function Amap() {
     });
     mapRef.current = map;
 
+    console.log("[rider]Map Start Locate");
     internalLocate();
+    initCamera();
   };
 
   const internalLocate = () => {
@@ -33,9 +37,8 @@ export default function Amap() {
     });
 
     locateTimer.current = setTimeout(() => {
-      locateTimer.current = null;
       internalLocate();
-    }, 10000);
+    }, 30000);
   };
 
   const handleClickLocate = () => {
@@ -49,8 +52,9 @@ export default function Amap() {
   const locate = (): Promise<Coord> => {
     const map = mapRef.current;
 
-    console.log("Request Location");
+    console.log("[rider]Request Locate");
     return getAmapCoordinate().then((res: Coord) => {
+      console.log("[rider]Locate Success Add Marker");
       const marker = createMarker(
         res,
         `<span><img width="40" height="65" src="/assets/mylocation.png" alt="my location" /></span>`
@@ -70,16 +74,30 @@ export default function Amap() {
     initAMapSecurityConfig();
   }, []);
 
+  const initCamera = () => {
+    const map = mapRef.current;
+    fetchCameraCoordinateData().then((res) => {
+      const data = res.data as Coord[];
+      const markers = data.map((item: Coord) => {
+        return { lnglat: [Number(item.lng), Number(item.lat)] };
+      });
+      createCluster(map, markers);
+    });
+  };
+
   return (
     <div className="w-full h-full">
       <Script
         strategy="lazyOnload"
-        src={`https://webapi.amap.com/maps?v=2.0&key=264273b8dbce35866e45d9fb138e93d2`}
+        src={`https://webapi.amap.com/maps?v=2.0&plugin=AMap.MarkerClusterer&key=${WEB_SDK_KEY}`}
         onReady={handleMapLoaded}
       />
       <div ref={mapNodeRef} className="w-full h-full rounded-lg" />
       <div className="absolute bottom-4 right-4">
-        <Button onClick={handleClickLocate}>
+        <Button
+          onClick={handleClickLocate}
+          className="bg-[hsl(349.7,89.2%,60.2%)] text-white hover:bg-[hsl(349.7,89.2%,50%)]"
+        >
           {isLocating ? <Loader2 className="animate-spin" /> : <LocateFixed />}
           Locate
         </Button>
