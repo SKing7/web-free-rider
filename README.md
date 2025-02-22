@@ -17,6 +17,10 @@ bun dev
 Docker
 
 > Dockerfile
+```shell
+docker build -t web-free-rider .
+docker run -p 1989:1989 web-free-rider
+```
 
 配置tunel
 

@@ -19,6 +19,11 @@ export const getAmapCoordinate = async (): Promise<Coord> => {
         const [longitude, latitude] = locations.split(",");
         resolve({ lng: longitude, lat: latitude });
       });
-    });
+    },
+    (error) => {
+      console.error("错误代码:", error.code, "错误信息:", error.message);
+    },
+    { timeout: 10000 } // 设置10秒超时
+  );
   });
 };
