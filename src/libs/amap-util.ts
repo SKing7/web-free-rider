@@ -22,7 +22,7 @@ export const createCluster = (map: any, points: { lnglat: number[], weight?: num
   const AMap = window.AMap;
   map.plugin(["AMap.MarkerCluster"], function () {
     const cluster = new AMap.MarkerCluster(map, points, {
-      gridSize: 40 // 聚合网格像素大小
+      gridSize: 30 // 聚合网格像素大小
     });
     return cluster;
   });

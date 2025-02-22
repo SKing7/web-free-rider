@@ -8,6 +8,7 @@ declare global {
       load: (options: { key: string }) => Promise<any>;
     };
     AMap: any;
+    wakeLock: any;
   }
 
 }

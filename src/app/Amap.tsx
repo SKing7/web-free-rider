@@ -4,13 +4,16 @@ import { getAmapCoordinate } from "@/libs/amap-service";
 import { createCluster, createMarker, setCenter } from "@/libs/amap-util";
 import { Coord } from "@/type";
 import Script from "next/script";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, LocateFixed } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { fetchCameraCoordinateData } from "@/libs/utils";
+import { fetchCameraCoordinateData, requestWakeLock } from "@/libs/utils";
+import SelectZoom from "./SelectZoom";
+
 
 export default function Amap() {
   const myLocationMarkerRef = useRef(null);
+  const [zoom, setZoom] = useState(14);
   const mapNodeRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const locateTimer = useRef<any>(null);
@@ -20,7 +23,7 @@ export default function Amap() {
     console.log("[rider]Map Loaded");
     const map = new window.AMap.Map(mapNodeRef.current, {
       viewMode: "2D", //默认使用 2D 模式
-      zoom: 14, //地图级别
+      zoom, //地图级别
       center: [116.397428, 39.90923], //地图中心点
     });
     mapRef.current = map;
@@ -30,16 +33,20 @@ export default function Amap() {
     initCamera();
   };
 
-  const internalLocate = () => {
+  useEffect(() => {
+    requestWakeLock();
+  }, []);
+
+  const internalLocate = useCallback(() => {
     setLocating(true);
     locate().then((coord) => {
-      setCenter(mapRef.current, coord, 15);
+      setCenter(mapRef.current, coord, zoom);
     });
 
     locateTimer.current = setTimeout(() => {
       internalLocate();
     }, 30000);
-  };
+  }, [zoom]);
 
   const handleClickLocate = () => {
     if (locateTimer.current) {
@@ -74,6 +81,11 @@ export default function Amap() {
     initAMapSecurityConfig();
   }, []);
 
+  const onChangeZoom = (v: number) => {
+    setZoom(v)
+    // setCenter(mapRef.current, coord, v);
+  };
+
   const initCamera = () => {
     const map = mapRef.current;
     fetchCameraCoordinateData().then((res) => {
@@ -94,13 +106,18 @@ export default function Amap() {
       />
       <div ref={mapNodeRef} className="w-full h-full rounded-lg" />
       <div className="absolute bottom-4 right-4">
-        <Button
-          onClick={handleClickLocate}
-          className="bg-[hsl(349.7,89.2%,60.2%)] text-white hover:bg-[hsl(349.7,89.2%,50%)]"
-        >
-          {isLocating ? <Loader2 className="animate-spin" /> : <LocateFixed />}
-          Locate
-        </Button>
+        <div>
+          <SelectZoom zoom={zoom} onChangeZoom={onChangeZoom}/>
+        </div>
+        <div className="mt-[10px]">
+          <Button
+            onClick={handleClickLocate}
+            className="bg-[hsl(349.7,89.2%,60.2%)] text-white hover:bg-[hsl(349.7,89.2%,50%)]"
+          >
+            {isLocating ? <Loader2 className="animate-spin" /> : <LocateFixed />}
+            Locate
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -23,7 +23,12 @@ export const getAmapCoordinate = async (): Promise<Coord> => {
     (error) => {
       console.error("错误代码:", error.code, "错误信息:", error.message);
     },
-    { timeout: 10000 } // 设置10秒超时
+    {
+
+      enableHighAccuracy: true, // 高精度模式
+      timeout: 10000,          // 10 秒超时
+      maximumAge: 0            // 不使用缓存位置
+    }
   );
   });
 };
