@@ -14,16 +14,22 @@ export const createMarker = (coord: Coord, markerContent: string) => {
   return marker;
 };
 
+
 export const setCenter = (map: any, coord: Coord, zoom: number = 11) => {
   map.setZoomAndCenter(zoom, [coord.lng, coord.lat]);
 }
 
 export const createCluster = (map: any, points: { lnglat: number[], weight?: number }[]) => {
   const AMap = window.AMap;
-  map.plugin(["AMap.MarkerCluster"], function () {
-    const cluster = new AMap.MarkerCluster(map, points, {
-      gridSize: 30 // 聚合网格像素大小
+  let cluster: { clear: () => void; } | null = null;
+
+  return new Promise((resolve) => {
+    map.plugin(["AMap.MarkerCluster"], function () {
+      cluster = new AMap.MarkerCluster(map, points, {
+        gridSize: 5 // 聚合网格像素大小
+      });
+      resolve(cluster);
     });
-    return cluster;
-  });
+  })
 }
+

@@ -14,8 +14,14 @@ import SelectZoom from "./SelectZoom";
 export default function Amap() {
   const myLocationMarkerRef = useRef(null);
   const [zoom, setZoom] = useState(14);
+  const [myCoord, setMyCoord] = useState<number[]>([
+    116.397428, 39.90923
+  ]);
   const mapNodeRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
+  const mapClusterRef = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
+  const zoomRef = useRef<number>(16);
   const locateTimer = useRef<any>(null);
   const [isLocating, setLocating] = useState(false);
 
@@ -24,7 +30,7 @@ export default function Amap() {
     const map = new window.AMap.Map(mapNodeRef.current, {
       viewMode: "2D", //默认使用 2D 模式
       zoom, //地图级别
-      center: [116.397428, 39.90923], //地图中心点
+      center: myCoord, //地图中心点
     });
     mapRef.current = map;
 
@@ -37,16 +43,25 @@ export default function Amap() {
     requestWakeLock();
   }, []);
 
-  const internalLocate = useCallback(() => {
+  useEffect(() => {
+    debugger
+    zoomRef.current = zoom;
+  }, [zoom]);
+
+
+  const internalLocate = () => {
+    const zoom = zoomRef.current;
+    debugger
     setLocating(true);
     locate().then((coord) => {
+      setLocating(false);
       setCenter(mapRef.current, coord, zoom);
     });
 
     locateTimer.current = setTimeout(() => {
       internalLocate();
-    }, 30000);
-  }, [zoom]);
+    }, 10000);
+  };
 
   const handleClickLocate = () => {
     if (locateTimer.current) {
@@ -69,9 +84,10 @@ export default function Amap() {
       if (myLocationMarkerRef.current) {
         map.remove(myLocationMarkerRef.current);
       }
+
+      setMyCoord([Number(res.lng), Number(res.lat)]);
       myLocationMarkerRef.current = marker;
       map.add(marker);
-      setLocating(false);
       return res;
     });
   };
@@ -81,21 +97,50 @@ export default function Amap() {
     initAMapSecurityConfig();
   }, []);
 
-  const onChangeZoom = (v: number) => {
-    setZoom(v)
-    // setCenter(mapRef.current, coord, v);
-  };
+  const updateMarkerOrCluster = useCallback((zoom: number) => {
 
-  const initCamera = () => {
+    const markers = markersRef.current;
     const map = mapRef.current;
+    if (zoom > 0) {
+      if (mapClusterRef.current) {
+        return;
+      }
+      createCluster(map, markers).then((cluster) => {
+        mapClusterRef.current = cluster;
+      });
+      markersRef.current.forEach((marker) => {
+        mapRef.current.remove(marker);
+      });
+    } else {
+      if (mapClusterRef.current) {
+        mapClusterRef.current.clear();
+        mapClusterRef.current = null;
+      }
+      markersRef.current.forEach((marker) => {
+        mapRef.current.add(marker);
+      });
+    }
+  }, []); 
+
+  const onChangeZoom = useCallback((v: number) => {
+    setZoom(v)
+    setCenter(mapRef.current, {
+      lng: myCoord[0],
+      lat: myCoord[1],
+    }, v);
+    updateMarkerOrCluster(v);
+  }, [myCoord]);
+
+  const initCamera = useCallback(() => {
     fetchCameraCoordinateData().then((res) => {
       const data = res.data as Coord[];
       const markers = data.map((item: Coord) => {
         return { lnglat: [Number(item.lng), Number(item.lat)] };
       });
-      createCluster(map, markers);
+      markersRef.current = markers;
+      updateMarkerOrCluster(zoom);
     });
-  };
+  }, [zoom]);
 
   return (
     <div className="w-full h-full">
