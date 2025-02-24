@@ -40,6 +40,8 @@ docker run -p 1989:1989 web-free-rider
 - 重启cloudflare服务
 
 ```shell
-launchctl stop com.cloudflare.tune.memorygame
+launchctl load ~/Library/LaunchAgents/com.cloudflare.tune.memorygame.plist
 launchctl start com.cloudflare.tune.memorygame
+launchctl stop com.cloudflare.tune.memorygame
+launchctl remove com.cloudflare.tune.memorygame
 ```
