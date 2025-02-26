@@ -10,13 +10,10 @@ import { Button } from "@/components/ui/button";
 import { fetchCameraCoordinateData, requestWakeLock } from "@/libs/utils";
 import SelectZoom from "./SelectZoom";
 
-
 export default function Amap() {
   const myLocationMarkerRef = useRef(null);
   const [zoom, setZoom] = useState(14);
-  const [myCoord, setMyCoord] = useState<number[]>([
-    116.397428, 39.90923
-  ]);
+  const [myCoord, setMyCoord] = useState<number[]>([116.397428, 39.90923]);
   const mapNodeRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const mapClusterRef = useRef<any>(null);
@@ -44,14 +41,13 @@ export default function Amap() {
   }, []);
 
   useEffect(() => {
-    debugger
+    debugger;
     zoomRef.current = zoom;
   }, [zoom]);
 
-
   const internalLocate = () => {
     const zoom = zoomRef.current;
-    debugger
+    debugger;
     setLocating(true);
     locate().then((coord) => {
       setLocating(false);
@@ -98,7 +94,6 @@ export default function Amap() {
   }, []);
 
   const updateMarkerOrCluster = useCallback((zoom: number) => {
-
     const markers = markersRef.current;
     const map = mapRef.current;
     if (zoom > 0) {
@@ -120,16 +115,23 @@ export default function Amap() {
         mapRef.current.add(marker);
       });
     }
-  }, []); 
+  }, []);
 
-  const onChangeZoom = useCallback((v: number) => {
-    setZoom(v)
-    setCenter(mapRef.current, {
-      lng: myCoord[0],
-      lat: myCoord[1],
-    }, v);
-    updateMarkerOrCluster(v);
-  }, [myCoord]);
+  const onChangeZoom = useCallback(
+    (v: number) => {
+      setZoom(v);
+      setCenter(
+        mapRef.current,
+        {
+          lng: myCoord[0],
+          lat: myCoord[1],
+        },
+        v
+      );
+      updateMarkerOrCluster(v);
+    },
+    [myCoord]
+  );
 
   const initCamera = useCallback(() => {
     fetchCameraCoordinateData().then((res) => {
@@ -140,7 +142,7 @@ export default function Amap() {
       markersRef.current = markers;
       updateMarkerOrCluster(zoom);
     });
-  }, [zoom]);
+  }, [updateMarkerOrCluster, zoom]);
 
   return (
     <div className="w-full h-full">
@@ -152,14 +154,18 @@ export default function Amap() {
       <div ref={mapNodeRef} className="w-full h-full rounded-lg" />
       <div className="absolute bottom-4 right-4">
         <div>
-          <SelectZoom zoom={zoom} onChangeZoom={onChangeZoom}/>
+          <SelectZoom zoom={zoom} onChangeZoom={onChangeZoom} />
         </div>
         <div className="mt-[10px]">
           <Button
             onClick={handleClickLocate}
             className="bg-[hsl(349.7,89.2%,60.2%)] text-white hover:bg-[hsl(349.7,89.2%,50%)]"
           >
-            {isLocating ? <Loader2 className="animate-spin" /> : <LocateFixed />}
+            {isLocating ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              <LocateFixed />
+            )}
             Locate
           </Button>
         </div>
